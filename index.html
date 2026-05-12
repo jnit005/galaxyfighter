@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Galaxy Hoverboard Wars</title>
+<title>Galaxy Wars</title>
 
 <style>
 
@@ -21,7 +21,6 @@ body{
 
 canvas{
     display:block;
-    background:black;
 }
 
 #startScreen,
@@ -40,58 +39,58 @@ canvas{
 }
 
 #startScreen{
-    background:radial-gradient(circle,#130026,#000);
+    background:radial-gradient(circle,#190033,#000);
 }
 
 #startScreen h1{
-    font-size:70px;
+    font-size:72px;
     color:#00eaff;
     margin-bottom:25px;
-    text-shadow:0 0 25px #00eaff;
+    text-shadow:0 0 30px #00eaff;
 }
 
 #playerName{
     padding:16px;
     width:320px;
-    font-size:22px;
-    border-radius:12px;
     border:none;
     outline:none;
+    border-radius:14px;
+    font-size:22px;
     text-align:center;
 }
 
 button{
     margin-top:20px;
     padding:14px 40px;
-    font-size:22px;
     border:none;
     border-radius:12px;
-    cursor:pointer;
     background:#00eaff;
     color:black;
+    font-size:22px;
     font-weight:bold;
+    cursor:pointer;
 }
 
 #roundText{
-    font-size:80px;
     display:none;
-    text-shadow:0 0 25px white;
+    font-size:85px;
     font-weight:bold;
+    text-shadow:0 0 25px white;
 }
 
 #gameOverScreen{
     display:none;
-    background:rgba(0,0,0,0.85);
+    background:rgba(0,0,0,0.88);
 }
 
 #gameOverScreen h1{
-    color:red;
     font-size:90px;
+    color:red;
 }
 
 #finalScreen{
     display:none;
-    background:rgba(0,0,0,0.95);
+    background:rgba(0,0,0,0.92);
 }
 
 #finalScreen h1{
@@ -108,34 +107,33 @@ button{
     position:absolute;
     top:0;
     width:100%;
-    padding:20px 30px;
     display:flex;
     justify-content:space-between;
+    padding:20px 30px;
     color:white;
     font-size:32px;
     font-weight:bold;
     z-index:10;
-    text-shadow:0 0 10px black;
 }
 
 #lives{
     position:absolute;
-    left:30px;
     top:70px;
+    left:30px;
     color:#ff5555;
     font-size:28px;
-    z-index:10;
     font-weight:bold;
+    z-index:10;
 }
 
 #gunStatus{
     position:absolute;
-    right:30px;
     top:70px;
+    right:30px;
     color:#00ff99;
     font-size:26px;
-    z-index:10;
     font-weight:bold;
+    z-index:10;
 }
 
 #controls{
@@ -155,7 +153,7 @@ button{
     border:3px solid white;
     background:rgba(255,255,255,0.12);
     color:white;
-    font-size:38px;
+    font-size:40px;
     display:flex;
     justify-content:center;
     align-items:center;
@@ -202,8 +200,8 @@ button{
 
 <canvas id="gameCanvas"></canvas>
 
-<audio id="bgMusic" loop>
-<source src="https://raw.githubusercontent.com/jnit005/galaxyfighter/main/Apogee%20_%20Empyrion%20-%20Galactic%20Survival%20_%20Official%20Soundtrack.mp3" type="audio/mp3">
+<audio id="bgMusic" preload="auto" loop crossorigin="anonymous">
+<source src="https://raw.githubusercontent.com/jnit005/galaxyfighter/main/Apogee%20_%20Empyrion%20-%20Galactic%20Survival%20_%20Official%20Soundtrack.mp3" type="audio/mpeg">
 </audio>
 
 <script>
@@ -211,39 +209,23 @@ button{
 const canvas = document.getElementById("gameCanvas");
 const ctx = canvas.getContext("2d");
 
-canvas.width = window.innerWidth;
-canvas.height = window.innerHeight;
+canvas.width = innerWidth;
+canvas.height = innerHeight;
 
 const bgMusic = document.getElementById("bgMusic");
 
-const asteroidImg = new Image();
-asteroidImg.src = "https://raw.githubusercontent.com/jnit005/galaxyfighter/main/aster.png";
-
-const cometImg = new Image();
-cometImg.src = "https://raw.githubusercontent.com/jnit005/galaxyfighter/main/com.png";
-
-const gunImg = new Image();
-gunImg.src = "https://raw.githubusercontent.com/jnit005/galaxyfighter/main/gun.jpg";
-
-const spaceshipImg = new Image();
-spaceshipImg.src = "https://raw.githubusercontent.com/jnit005/galaxyfighter/main/spoaceship.png";
-
-const playerImg = new Image();
-playerImg.src = "https://raw.githubusercontent.com/jnit005/galaxyfighter/main/game%20user%20icon.gif";
-
-let gameStarted = false;
-let playerName = "";
 let score = 0;
 let round = 1;
 let lives = 3;
-let roundTime = 45;
-let timer = roundTime;
-
+let timer = 45;
+let gameStarted = false;
+let playerName = "";
 let obstacles = [];
 let bullets = [];
-let particles = [];
+let fireworks = [];
 let stars = [];
-
+let nebulaParticles = [];
+let keys = {};
 let leftPressed = false;
 let rightPressed = false;
 
@@ -255,35 +237,56 @@ let gunSpawned = false;
 const player = {
     x: canvas.width/2,
     y: canvas.height - 180,
-    width: 90,
+    width: 85,
     height: 120,
     speed: 10
 };
 
-for(let i=0;i<500;i++){
+for(let i=0;i<550;i++){
 
     stars.push({
         x:Math.random()*canvas.width,
         y:Math.random()*canvas.height,
-        size:Math.random()*3,
-        speed:Math.random()*5 + 1
+        size:Math.random()*2.5,
+        speed:Math.random()*5+1
+    });
+}
+
+for(let i=0;i<35;i++){
+
+    nebulaParticles.push({
+        x:Math.random()*canvas.width,
+        y:Math.random()*canvas.height,
+        radius:120 + Math.random()*200,
+        color:[
+            "rgba(0,120,255,0.08)",
+            "rgba(255,0,150,0.08)",
+            "rgba(255,80,0,0.07)",
+            "rgba(0,255,180,0.06)"
+        ][Math.floor(Math.random()*4)]
     });
 }
 
 function startGame(){
 
-    playerName = document.getElementById("playerName").value;
+    playerName = document.getElementById("playerName").value.trim();
 
-    if(playerName.trim() === ""){
+    if(playerName === ""){
         alert("Enter player name");
         return;
     }
 
-    bgMusic.volume = 0.4;
-    bgMusic.play();
-
     document.getElementById("startScreen").style.display = "none";
     document.getElementById("usernameHUD").innerText = playerName;
+
+    // FIXED AUDIO
+    bgMusic.volume = 0.45;
+
+    const playPromise = bgMusic.play();
+
+    if(playPromise !== undefined){
+        playPromise.catch(()=>{});
+    }
 
     startRound(round);
 }
@@ -295,15 +298,17 @@ function startRound(r){
     gunItem = null;
     gunSpawned = false;
     gunPower = false;
-    timer = roundTime;
+    timer = 45;
     lives = 3;
 
     updateLives();
 
-    showRoundText("ROUND " + r);
+    showRound("ROUND " + r);
 
     setTimeout(()=>{
+
         gameStarted = true;
+
         requestAnimationFrame(gameLoop);
 
         roundTimer = setInterval(()=>{
@@ -323,7 +328,7 @@ function startRound(r){
     },2200);
 }
 
-function showRoundText(text){
+function showRound(text){
 
     const rt = document.getElementById("roundText");
 
@@ -341,7 +346,7 @@ function gameLoop(){
 
     ctx.clearRect(0,0,canvas.width,canvas.height);
 
-    drawGalaxyBackground();
+    drawGalaxy();
 
     movePlayer();
 
@@ -360,10 +365,12 @@ function gameLoop(){
         gunTimer--;
 
         document.getElementById("gunStatus").innerText =
-            "BLASTER: " + Math.floor(gunTimer/60) + "s";
+            "BLASTER : " + Math.floor(gunTimer/60) + "s";
 
-        if(gunTimer <=0){
+        if(gunTimer <= 0){
+
             gunPower = false;
+
             document.getElementById("gunStatus").innerText = "";
         }
     }
@@ -371,68 +378,68 @@ function gameLoop(){
     requestAnimationFrame(gameLoop);
 }
 
-function drawGalaxyBackground(){
+function drawGalaxy(){
 
     let gradient = ctx.createLinearGradient(0,0,0,canvas.height);
 
     gradient.addColorStop(0,"#000010");
-    gradient.addColorStop(1,"#140028");
+    gradient.addColorStop(1,"#130021");
 
     ctx.fillStyle = gradient;
     ctx.fillRect(0,0,canvas.width,canvas.height);
 
-    // realistic nebula layers
+    // realistic nebula
 
-    for(let i=0;i<12;i++){
+    nebulaParticles.forEach(n=>{
 
-        let x = Math.sin(Date.now()*0.00008+i)*500 + canvas.width/2;
-        let y = i * 90;
+        let g = ctx.createRadialGradient(
+            n.x,n.y,20,
+            n.x,n.y,n.radius
+        );
 
-        let nebula = ctx.createRadialGradient(x,y,50,x,y,260);
+        g.addColorStop(0,n.color);
+        g.addColorStop(1,"rgba(0,0,0,0)");
 
-        nebula.addColorStop(0,"rgba(255,0,120,0.12)");
-        nebula.addColorStop(0.5,"rgba(0,120,255,0.08)");
-        nebula.addColorStop(1,"rgba(0,0,0,0)");
-
-        ctx.fillStyle = nebula;
+        ctx.fillStyle = g;
 
         ctx.beginPath();
-        ctx.arc(x,y,260,0,Math.PI*2);
+        ctx.arc(n.x,n.y,n.radius,0,Math.PI*2);
         ctx.fill();
-    }
+    });
 
-    // andromeda galaxy effect
+    // spiral galaxy
 
     ctx.save();
 
     ctx.translate(canvas.width/2, canvas.height/2);
 
-    ctx.rotate(Date.now()*0.00005);
+    ctx.rotate(Date.now()*0.00004);
 
-    for(let i=0;i<120;i++){
+    for(let i=0;i<250;i++){
 
-        let angle = i * 0.3;
-        let radius = i * 3;
+        let angle = i * 0.35;
+        let radius = i * 2;
 
-        let x = Math.cos(angle) * radius;
-        let y = Math.sin(angle) * radius;
+        let x = Math.cos(angle)*radius;
+        let y = Math.sin(angle)*radius;
 
-        ctx.fillStyle = "rgba(255,255,255,0.05)";
+        ctx.fillStyle = "rgba(255,255,255,0.06)";
+
         ctx.beginPath();
-        ctx.arc(x,y,2,0,Math.PI*2);
+        ctx.arc(x,y,1.8,0,Math.PI*2);
         ctx.fill();
     }
 
     ctx.restore();
 
+    // moving stars
+
     for(let star of stars){
 
         ctx.beginPath();
-
-        ctx.fillStyle = "white";
-
         ctx.arc(star.x,star.y,star.size,0,Math.PI*2);
 
+        ctx.fillStyle = "white";
         ctx.fill();
 
         star.y += star.speed;
@@ -443,57 +450,148 @@ function drawGalaxyBackground(){
             star.x = Math.random()*canvas.width;
         }
     }
+
+    // glowing planet
+
+    let planetGlow = ctx.createRadialGradient(
+        canvas.width-130,
+        130,
+        20,
+        canvas.width-130,
+        130,
+        100
+    );
+
+    planetGlow.addColorStop(0,"#ffdd66");
+    planetGlow.addColorStop(1,"rgba(255,120,0,0)");
+
+    ctx.fillStyle = planetGlow;
+
+    ctx.beginPath();
+    ctx.arc(canvas.width-130,130,100,0,Math.PI*2);
+    ctx.fill();
 }
 
 function movePlayer(){
 
-    if(leftPressed || keys["ArrowLeft"]){
+    if(keys["ArrowLeft"] || leftPressed){
         player.x -= player.speed;
     }
 
-    if(rightPressed || keys["ArrowRight"]){
+    if(keys["ArrowRight"] || rightPressed){
         player.x += player.speed;
     }
 
-    player.x = Math.max(0,Math.min(canvas.width-player.width,player.x));
+    player.x = Math.max(0, Math.min(canvas.width-player.width, player.x));
 }
 
 function drawPlayer(){
 
-    ctx.shadowBlur = 35;
+    // hoverboard glow
+
+    ctx.shadowBlur = 25;
     ctx.shadowColor = "#00eaff";
 
-    ctx.drawImage(
-        playerImg,
+    let hoverGradient = ctx.createLinearGradient(
         player.x,
-        player.y,
-        player.width,
-        player.height
+        player.y+95,
+        player.x+100,
+        player.y+95
     );
 
+    hoverGradient.addColorStop(0,"#00eaff");
+    hoverGradient.addColorStop(1,"#0044ff");
+
+    ctx.fillStyle = hoverGradient;
+
+    ctx.beginPath();
+    ctx.roundRect(player.x-10,player.y+90,110,16,12);
+    ctx.fill();
+
     ctx.shadowBlur = 0;
+
+    // legs
+
+    ctx.fillStyle = "#2955ff";
+    ctx.fillRect(player.x+24,player.y+52,18,42);
+    ctx.fillRect(player.x+46,player.y+52,18,42);
+
+    // shoes
+
+    ctx.fillStyle = "#fff";
+    ctx.fillRect(player.x+22,player.y+88,20,8);
+    ctx.fillRect(player.x+46,player.y+88,20,8);
+
+    // jacket
+
+    let jacket = ctx.createLinearGradient(
+        player.x,
+        player.y,
+        player.x+60,
+        player.y+50
+    );
+
+    jacket.addColorStop(0,"#101010");
+    jacket.addColorStop(1,"#444");
+
+    ctx.fillStyle = jacket;
+    ctx.fillRect(player.x+16,player.y+10,50,48);
+
+    // backpack
+
+    ctx.fillStyle = "#111";
+    ctx.fillRect(player.x+8,player.y+16,16,34);
+
+    // arms
+
+    ctx.fillStyle = "#dba27b";
+    ctx.fillRect(player.x+8,player.y+18,12,30);
+    ctx.fillRect(player.x+64,player.y+18,12,30);
+
+    // neck
+
+    ctx.fillRect(player.x+34,player.y+2,10,10);
+
+    // face
+
+    ctx.beginPath();
+    ctx.arc(player.x+40,player.y,18,0,Math.PI*2);
+    ctx.fillStyle = "#f2c19b";
+    ctx.fill();
+
+    // cap
+
+    ctx.fillStyle = "#ff003c";
+    ctx.fillRect(player.x+23,player.y-14,34,11);
+
+    ctx.fillRect(player.x+50,player.y-10,14,5);
+
+    // eyes
+
+    ctx.fillStyle = "black";
+    ctx.fillRect(player.x+34,player.y-2,3,3);
+    ctx.fillRect(player.x+44,player.y-2,3,3);
 }
 
 function spawnObstacle(){
 
-    // slightly increased obstacle frequency only
+    // MORE realistic traffic
 
-    let rate = 0.032 + (round*0.01);
+    let rate = 0.04 + (round*0.012);
 
     if(Math.random() < rate){
 
-        let types = ["asteroid","comet","alien"];
-
-        let type = types[Math.floor(Math.random()*types.length)];
+        let type = ["asteroid","comet","alien"]
+        [Math.floor(Math.random()*3)];
 
         obstacles.push({
-            x:Math.random()*(canvas.width-100),
-            y:-100,
-            width:85,
-            height:85,
-            speed:5 + round*1.2,
+            x:Math.random()*(canvas.width-120),
+            y:-120,
+            width:90,
+            height:90,
+            speed:5 + round*1.3,
             type:type,
-            rotate:Math.random()*360
+            rotation:Math.random()*360
         });
     }
 }
@@ -505,45 +603,95 @@ function updateObstacles(){
         let o = obstacles[i];
 
         o.y += o.speed;
-        o.rotate += 1.5;
+        o.rotation += 2;
 
         ctx.save();
 
         ctx.translate(o.x,o.y);
+        ctx.rotate(o.rotation*Math.PI/180);
 
-        ctx.rotate(o.rotate * Math.PI/180);
+        // REALISTIC ASTEROID
 
         if(o.type === "asteroid"){
 
-            ctx.drawImage(
-                asteroidImg,
-                -45,
-                -45,
-                90,
-                90
-            );
+            ctx.beginPath();
+
+            for(let a=0;a<12;a++){
+
+                let angle = (Math.PI*2/12)*a;
+                let radius = 38 + Math.random()*10;
+
+                ctx.lineTo(
+                    Math.cos(angle)*radius,
+                    Math.sin(angle)*radius
+                );
+            }
+
+            let rock = ctx.createRadialGradient(0,0,10,0,0,50);
+
+            rock.addColorStop(0,"#9b9b9b");
+            rock.addColorStop(1,"#353535");
+
+            ctx.fillStyle = rock;
+            ctx.fill();
         }
+
+        // REALISTIC COMET
 
         else if(o.type === "comet"){
 
-            ctx.drawImage(
-                cometImg,
-                -60,
-                -45,
-                120,
-                90
-            );
+            let tail = ctx.createLinearGradient(-120,0,20,0);
+
+            tail.addColorStop(0,"rgba(255,120,0,0)");
+            tail.addColorStop(1,"rgba(255,220,120,0.9)");
+
+            ctx.fillStyle = tail;
+            ctx.fillRect(-130,-14,130,28);
+
+            let fire = ctx.createRadialGradient(0,0,5,0,0,35);
+
+            fire.addColorStop(0,"#fff7aa");
+            fire.addColorStop(0.5,"#ff9933");
+            fire.addColorStop(1,"#ff4400");
+
+            ctx.fillStyle = fire;
+
+            ctx.beginPath();
+            ctx.arc(0,0,34,0,Math.PI*2);
+            ctx.fill();
         }
+
+        // REALISTIC SPACESHIP
 
         else{
 
-            ctx.drawImage(
-                spaceshipImg,
-                -50,
-                -40,
-                100,
-                80
-            );
+            let ship = ctx.createLinearGradient(-50,0,50,0);
+
+            ship.addColorStop(0,"#2f2f2f");
+            ship.addColorStop(0.5,"#8d8d8d");
+            ship.addColorStop(1,"#2f2f2f");
+
+            ctx.fillStyle = ship;
+
+            ctx.beginPath();
+            ctx.ellipse(0,0,50,20,0,0,Math.PI*2);
+            ctx.fill();
+
+            ctx.fillStyle = "#9dfdff";
+
+            ctx.beginPath();
+            ctx.arc(0,-10,14,0,Math.PI*2);
+            ctx.fill();
+
+            ctx.fillStyle = "#00eaff";
+
+            ctx.beginPath();
+            ctx.arc(-25,8,5,0,Math.PI*2);
+            ctx.fill();
+
+            ctx.beginPath();
+            ctx.arc(25,8,5,0,Math.PI*2);
+            ctx.fill();
         }
 
         ctx.restore();
@@ -621,77 +769,8 @@ function nextRound(){
         startRound(round);
     }
     else{
-
         finalCelebration();
     }
-}
-
-function finalCelebration(){
-
-    document.getElementById("finalScreen").style.display = "flex";
-
-    document.getElementById("winnerName").innerHTML =
-        "<h2>"+playerName+"</h2>";
-
-    document.getElementById("finalScore").innerHTML =
-        "FINAL SCORE : " + score;
-
-    setInterval(()=>{
-
-        for(let i=0;i<100;i++){
-
-            particles.push({
-                x:Math.random()*canvas.width,
-                y:Math.random()*canvas.height/2,
-                radius:Math.random()*4,
-                dx:(Math.random()-0.5)*8,
-                dy:(Math.random()-0.5)*8,
-                alpha:1
-            });
-        }
-
-    },500);
-
-    animateFireworks();
-}
-
-function animateFireworks(){
-
-    function loop(){
-
-        ctx.fillStyle = "rgba(0,0,0,0.2)";
-        ctx.fillRect(0,0,canvas.width,canvas.height);
-
-        for(let i=particles.length-1;i>=0;i--){
-
-            let p = particles[i];
-
-            ctx.beginPath();
-
-            ctx.arc(p.x,p.y,p.radius,0,Math.PI*2);
-
-            ctx.fillStyle =
-            `rgba(${Math.random()*255},
-            ${Math.random()*255},
-            ${Math.random()*255},
-            ${p.alpha})`;
-
-            ctx.fill();
-
-            p.x += p.dx;
-            p.y += p.dy;
-
-            p.alpha -= 0.01;
-
-            if(p.alpha <=0){
-                particles.splice(i,1);
-            }
-        }
-
-        requestAnimationFrame(loop);
-    }
-
-    loop();
 }
 
 function spawnGun(){
@@ -710,13 +789,36 @@ function updateGun(){
 
         gunItem.y += 5;
 
-        ctx.drawImage(
-            gunImg,
-            gunItem.x,
-            gunItem.y,
-            90,
-            55
-        );
+        ctx.save();
+
+        ctx.translate(gunItem.x,gunItem.y);
+
+        // realistic gun
+
+        let gunGradient = ctx.createLinearGradient(0,0,70,0);
+
+        gunGradient.addColorStop(0,"#1e1e1e");
+        gunGradient.addColorStop(1,"#555");
+
+        ctx.fillStyle = gunGradient;
+        ctx.fillRect(0,0,70,14);
+
+        ctx.fillStyle = "#00eaff";
+        ctx.fillRect(48,3,22,8);
+
+        ctx.fillStyle = "#333";
+        ctx.fillRect(18,14,12,24);
+
+        ctx.fillStyle = "#888";
+        ctx.fillRect(6,-5,18,5);
+
+        ctx.shadowBlur = 20;
+        ctx.shadowColor = "#00ffff";
+
+        ctx.fillStyle = "#00ffff";
+        ctx.fillRect(48,2,18,10);
+
+        ctx.restore();
 
         if(
             player.x < gunItem.x+70 &&
@@ -737,7 +839,7 @@ function shootBullet(){
     bullets.push({
         x:player.x+40,
         y:player.y,
-        speed:14
+        speed:15
     });
 }
 
@@ -781,7 +883,73 @@ function updateBullets(){
     }
 }
 
-let keys = {};
+function finalCelebration(){
+
+    document.getElementById("finalScreen").style.display = "flex";
+
+    document.getElementById("winnerName").innerHTML =
+        "<h2>"+playerName+"</h2>";
+
+    document.getElementById("finalScore").innerHTML =
+        "FINAL SCORE : " + score;
+
+    setInterval(()=>{
+
+        for(let i=0;i<100;i++){
+
+            fireworks.push({
+                x:Math.random()*canvas.width,
+                y:Math.random()*canvas.height/2,
+                radius:Math.random()*4,
+                dx:(Math.random()-0.5)*8,
+                dy:(Math.random()-0.5)*8,
+                alpha:1
+            });
+        }
+
+    },500);
+
+    animateFireworks();
+}
+
+function animateFireworks(){
+
+    function loop(){
+
+        ctx.fillStyle = "rgba(0,0,0,0.15)";
+        ctx.fillRect(0,0,canvas.width,canvas.height);
+
+        for(let i=fireworks.length-1;i>=0;i--){
+
+            let f = fireworks[i];
+
+            ctx.beginPath();
+
+            ctx.arc(f.x,f.y,f.radius,0,Math.PI*2);
+
+            ctx.fillStyle =
+            `rgba(${Math.random()*255},
+            ${Math.random()*255},
+            ${Math.random()*255},
+            ${f.alpha})`;
+
+            ctx.fill();
+
+            f.x += f.dx;
+            f.y += f.dy;
+
+            f.alpha -= 0.01;
+
+            if(f.alpha <=0){
+                fireworks.splice(i,1);
+            }
+        }
+
+        requestAnimationFrame(loop);
+    }
+
+    loop();
+}
 
 document.addEventListener("keydown",e=>{
 
@@ -821,8 +989,8 @@ shootBtn.onclick = ()=>{
 
 window.addEventListener("resize",()=>{
 
-    canvas.width = window.innerWidth;
-    canvas.height = window.innerHeight;
+    canvas.width = innerWidth;
+    canvas.height = innerHeight;
 });
 
 </script>
