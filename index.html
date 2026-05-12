@@ -1,11 +1,12 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Galaxy Hoverboard Wars</title>
 
 <style>
+
 *{
     margin:0;
     padding:0;
@@ -20,13 +21,13 @@ body{
 
 canvas{
     display:block;
-    background: radial-gradient(circle at top, #25124f, #070014 70%);
+    background:black;
 }
 
 #startScreen,
+#roundText,
 #gameOverScreen,
-#finalScreen,
-#roundText{
+#finalScreen{
     position:absolute;
     width:100%;
     height:100%;
@@ -34,48 +35,48 @@ canvas{
     justify-content:center;
     align-items:center;
     flex-direction:column;
-    z-index:10;
+    z-index:20;
     color:white;
 }
 
 #startScreen{
-    background:black;
+    background:radial-gradient(circle,#130026,#000);
 }
 
 #startScreen h1{
-    font-size:60px;
+    font-size:70px;
+    color:#00eaff;
     margin-bottom:25px;
-    color:#00e5ff;
-    text-shadow:0 0 20px #00e5ff;
+    text-shadow:0 0 25px #00eaff;
 }
 
 #playerName{
     padding:16px;
-    width:300px;
+    width:320px;
     font-size:22px;
-    border:none;
     border-radius:12px;
+    border:none;
     outline:none;
     text-align:center;
 }
 
 button{
     margin-top:20px;
-    padding:14px 35px;
+    padding:14px 40px;
     font-size:22px;
     border:none;
     border-radius:12px;
     cursor:pointer;
-    background:#00e5ff;
+    background:#00eaff;
     color:black;
     font-weight:bold;
 }
 
 #roundText{
-    font-size:70px;
-    font-weight:bold;
-    text-shadow:0 0 25px white;
+    font-size:80px;
     display:none;
+    text-shadow:0 0 25px white;
+    font-weight:bold;
 }
 
 #gameOverScreen{
@@ -84,9 +85,8 @@ button{
 }
 
 #gameOverScreen h1{
-    font-size:70px;
     color:red;
-    margin-bottom:20px;
+    font-size:90px;
 }
 
 #finalScreen{
@@ -96,36 +96,45 @@ button{
 
 #finalScreen h1{
     font-size:90px;
-    margin-bottom:20px;
     color:#00ffcc;
 }
 
 #finalScore{
     font-size:50px;
-    margin-top:15px;
+    margin-top:20px;
 }
 
 #hud{
     position:absolute;
     top:0;
     width:100%;
+    padding:20px 30px;
     display:flex;
     justify-content:space-between;
-    padding:18px 30px;
     color:white;
-    z-index:5;
-    font-size:30px;
+    font-size:32px;
     font-weight:bold;
+    z-index:10;
     text-shadow:0 0 10px black;
 }
 
 #lives{
     position:absolute;
-    top:70px;
     left:30px;
-    color:#ff4f4f;
+    top:70px;
+    color:#ff5555;
     font-size:28px;
-    z-index:5;
+    z-index:10;
+    font-weight:bold;
+}
+
+#gunStatus{
+    position:absolute;
+    right:30px;
+    top:70px;
+    color:#00ff99;
+    font-size:26px;
+    z-index:10;
     font-weight:bold;
 }
 
@@ -136,33 +145,22 @@ button{
     display:flex;
     justify-content:center;
     gap:25px;
-    z-index:6;
+    z-index:10;
 }
 
 .controlBtn{
     width:90px;
     height:90px;
     border-radius:50%;
-    background:rgba(255,255,255,0.15);
     border:3px solid white;
+    background:rgba(255,255,255,0.12);
     color:white;
     font-size:38px;
-    font-weight:bold;
     display:flex;
-    align-items:center;
     justify-content:center;
+    align-items:center;
     user-select:none;
-    backdrop-filter: blur(5px);
-}
-
-#gunTimer{
-    position:absolute;
-    top:110px;
-    right:30px;
-    color:#00ff99;
-    font-size:24px;
-    font-weight:bold;
-    z-index:6;
+    backdrop-filter:blur(5px);
 }
 
 </style>
@@ -171,7 +169,7 @@ button{
 
 <div id="startScreen">
     <h1>GALAXY HOVERBOARD WARS</h1>
-    <input type="text" id="playerName" placeholder="Enter Your Name"/>
+    <input type="text" id="playerName" placeholder="Enter Your Name">
     <button onclick="startGame()">START GAME</button>
 </div>
 
@@ -194,7 +192,7 @@ button{
 </div>
 
 <div id="lives">Lives: 3</div>
-<div id="gunTimer"></div>
+<div id="gunStatus"></div>
 
 <div id="controls">
     <div class="controlBtn" id="leftBtn">◀</div>
@@ -204,26 +202,36 @@ button{
 
 <canvas id="gameCanvas"></canvas>
 
+<audio id="bgMusic" loop>
+<source src="https://raw.githubusercontent.com/jnit005/galaxyfighter/main/Apogee%20_%20Empyrion%20-%20Galactic%20Survival%20_%20Official%20Soundtrack.mp3" type="audio/mp3">
+</audio>
+
 <script>
+
 const canvas = document.getElementById("gameCanvas");
 const ctx = canvas.getContext("2d");
 
 canvas.width = window.innerWidth;
 canvas.height = window.innerHeight;
 
+const bgMusic = document.getElementById("bgMusic");
+
 let gameStarted = false;
 let playerName = "";
 let score = 0;
 let round = 1;
-let roundTime = 45;
-let timeLeft = roundTime;
 let lives = 3;
-let gameLoop;
+let roundTime = 45;
+let timer = roundTime;
+
 let obstacles = [];
 let bullets = [];
+let particles = [];
 let stars = [];
-let fireworks = [];
-let keys = {};
+
+let leftPressed = false;
+let rightPressed = false;
+
 let gunPower = false;
 let gunTimer = 0;
 let gunItem = null;
@@ -231,39 +239,32 @@ let gunSpawned = false;
 
 const player = {
     x: canvas.width/2,
-    y: canvas.height - 150,
-    width: 70,
-    height: 90,
-    speed: 8
+    y: canvas.height - 180,
+    width: 80,
+    height: 110,
+    speed: 10
 };
 
-for(let i=0;i<250;i++){
+for(let i=0;i<400;i++){
     stars.push({
-        x: Math.random()*canvas.width,
-        y: Math.random()*canvas.height,
-        size: Math.random()*3
+        x:Math.random()*canvas.width,
+        y:Math.random()*canvas.height,
+        size:Math.random()*3,
+        speed:Math.random()*4 + 1
     });
 }
 
-document.addEventListener("keydown", e=>{
-    keys[e.key] = true;
-
-    if(e.key === " " && gunPower){
-        shootBullet();
-    }
-});
-
-document.addEventListener("keyup", e=>{
-    keys[e.key] = false;
-});
-
 function startGame(){
-    playerName = document.getElementById("playerName").value.trim();
 
-    if(playerName === ""){
+    playerName = document.getElementById("playerName").value;
+
+    if(playerName.trim() === ""){
         alert("Enter player name");
         return;
     }
+
+    bgMusic.volume = 0.4;
+    bgMusic.play();
 
     document.getElementById("startScreen").style.display = "none";
     document.getElementById("usernameHUD").innerText = playerName;
@@ -272,55 +273,65 @@ function startGame(){
 }
 
 function startRound(r){
+
     obstacles = [];
     bullets = [];
     gunItem = null;
     gunSpawned = false;
-    timeLeft = roundTime;
+    gunPower = false;
+    timer = roundTime;
     lives = 3;
+
     updateLives();
 
-    showRoundText("ROUND " + r + " BEGINS");
+    showRoundText("ROUND " + r);
 
     setTimeout(()=>{
         gameStarted = true;
-        gameLoop = setInterval(updateGame,1000/60);
-        setInterval(()=>{
-            if(gameStarted){
-                timeLeft--;
+        requestAnimationFrame(gameLoop);
 
-                if(timeLeft === 22 && !gunSpawned){
-                    spawnGun();
-                }
+        roundTimer = setInterval(()=>{
 
-                if(timeLeft <= 0){
-                    nextRound();
-                }
+            timer--;
+
+            if(timer === 22 && !gunSpawned){
+                spawnGun();
             }
+
+            if(timer <= 0){
+                nextRound();
+            }
+
         },1000);
-    },2500);
+
+    },2200);
 }
 
 function showRoundText(text){
-    const el = document.getElementById("roundText");
-    el.innerText = text;
-    el.style.display = "flex";
+
+    const rt = document.getElementById("roundText");
+
+    rt.innerText = text;
+    rt.style.display = "flex";
 
     setTimeout(()=>{
-        el.style.display = "none";
+        rt.style.display = "none";
     },2000);
 }
 
-function updateGame(){
+function gameLoop(){
+
+    if(!gameStarted) return;
+
     ctx.clearRect(0,0,canvas.width,canvas.height);
 
-    drawBackground();
+    drawGalaxyBackground();
 
     movePlayer();
 
     drawPlayer();
 
-    spawnObstacles();
+    spawnObstacle();
 
     updateObstacles();
 
@@ -328,89 +339,166 @@ function updateGame(){
 
     updateGun();
 
-    drawSun();
+    drawSunPlanet();
 
     if(gunPower){
+
         gunTimer--;
 
-        document.getElementById("gunTimer").innerText =
-            "Blaster: " + Math.floor(gunTimer/60) + "s";
+        document.getElementById("gunStatus").innerText =
+            "BLASTER: " + Math.floor(gunTimer/60) + "s";
 
-        if(gunTimer <= 0){
+        if(gunTimer <=0){
             gunPower = false;
-            document.getElementById("gunTimer").innerText = "";
+            document.getElementById("gunStatus").innerText = "";
         }
     }
+
+    requestAnimationFrame(gameLoop);
 }
 
-function drawBackground(){
+function drawGalaxyBackground(){
+
+    let gradient = ctx.createLinearGradient(0,0,0,canvas.height);
+
+    gradient.addColorStop(0,"#030014");
+    gradient.addColorStop(1,"#12002f");
+
+    ctx.fillStyle = gradient;
+    ctx.fillRect(0,0,canvas.width,canvas.height);
+
     for(let star of stars){
-        ctx.fillStyle = "white";
+
         ctx.beginPath();
+        ctx.fillStyle = "white";
         ctx.arc(star.x,star.y,star.size,0,Math.PI*2);
         ctx.fill();
 
-        star.y += 0.5;
+        star.y += star.speed;
 
         if(star.y > canvas.height){
             star.y = 0;
             star.x = Math.random()*canvas.width;
         }
     }
+
+    for(let i=0;i<8;i++){
+
+        ctx.beginPath();
+        ctx.arc(
+            Math.sin(Date.now()*0.0001+i)*canvas.width + canvas.width/2,
+            i*100,
+            120,
+            0,
+            Math.PI*2
+        );
+
+        ctx.fillStyle = "rgba(255,0,255,0.03)";
+        ctx.fill();
+    }
 }
 
-function drawSun(){
+function drawSunPlanet(){
+
     ctx.beginPath();
-    ctx.arc(canvas.width-120,120,60,0,Math.PI*2);
-    ctx.fillStyle = "#ff9933";
-    ctx.shadowBlur = 30;
+    ctx.arc(canvas.width-130,120,60,0,Math.PI*2);
+
+    let g = ctx.createRadialGradient(
+        canvas.width-130,120,10,
+        canvas.width-130,120,70
+    );
+
+    g.addColorStop(0,"#ffcc55");
+    g.addColorStop(1,"#ff5500");
+
+    ctx.fillStyle = g;
+    ctx.shadowBlur = 40;
     ctx.shadowColor = "#ff6600";
     ctx.fill();
     ctx.shadowBlur = 0;
 }
 
 function movePlayer(){
-    if(keys["ArrowLeft"] || leftPressed){
+
+    if(leftPressed || keys["ArrowLeft"]){
         player.x -= player.speed;
     }
 
-    if(keys["ArrowRight"] || rightPressed){
+    if(rightPressed || keys["ArrowRight"]){
         player.x += player.speed;
     }
 
-    player.x = Math.max(0, Math.min(canvas.width-player.width, player.x));
+    player.x = Math.max(0,Math.min(canvas.width-player.width,player.x));
 }
 
 function drawPlayer(){
-    ctx.fillStyle = "#00e5ff";
+
+    // hoverboard glow
+    ctx.shadowBlur = 25;
+    ctx.shadowColor = "#00f7ff";
+
+    let hoverGradient = ctx.createLinearGradient(
+        player.x,
+        player.y+85,
+        player.x+80,
+        player.y+85
+    );
+
+    hoverGradient.addColorStop(0,"#00f7ff");
+    hoverGradient.addColorStop(1,"#0044ff");
+
+    ctx.fillStyle = hoverGradient;
 
     ctx.beginPath();
-    ctx.roundRect(player.x, player.y, player.width, player.height, 15);
+    ctx.roundRect(player.x-10,player.y+80,100,18,12);
     ctx.fill();
 
-    ctx.fillStyle = "#ff00ff";
-    ctx.fillRect(player.x-10, player.y+65, player.width+20, 12);
+    ctx.shadowBlur = 0;
 
-    ctx.fillStyle = "white";
-    ctx.fillRect(player.x+10, player.y+15, 15,15);
-    ctx.fillRect(player.x+45, player.y+15, 15,15);
+    // legs
+    ctx.fillStyle = "#305cff";
+    ctx.fillRect(player.x+20,player.y+45,18,40);
+    ctx.fillRect(player.x+42,player.y+45,18,40);
+
+    // jacket
+    ctx.fillStyle = "#101010";
+    ctx.fillRect(player.x+15,player.y+10,50,45);
+
+    // arms
+    ctx.fillStyle = "#d9a066";
+    ctx.fillRect(player.x+5,player.y+18,12,30);
+    ctx.fillRect(player.x+63,player.y+18,12,30);
+
+    // head
+    ctx.beginPath();
+    ctx.arc(player.x+40,player.y,16,0,Math.PI*2);
+    ctx.fillStyle = "#f0c08a";
+    ctx.fill();
+
+    // cap
+    ctx.fillStyle = "#ff0033";
+    ctx.fillRect(player.x+24,player.y-14,30,10);
+    ctx.fillRect(player.x+50,player.y-10,12,5);
 }
 
-function spawnObstacles(){
+function spawnObstacle(){
 
-    let spawnRate = 0.025 + (round * 0.01);
+    let rate = 0.022 + (round*0.008);
 
-    if(Math.random() < spawnRate){
+    if(Math.random() < rate){
 
-        let type = ["asteroid","comet","alien"][Math.floor(Math.random()*3)];
+        let types = ["asteroid","comet","alien"];
+
+        let type = types[Math.floor(Math.random()*types.length)];
 
         obstacles.push({
-            x: Math.random()*(canvas.width-80),
-            y: -100,
-            width: 70,
-            height: 70,
-            speed: 4 + round * 1.2,
-            type:type
+            x:Math.random()*(canvas.width-100),
+            y:-100,
+            width:80,
+            height:80,
+            speed:5 + round*1.2,
+            type:type,
+            rotate:Math.random()*360
         });
     }
 }
@@ -422,34 +510,69 @@ function updateObstacles(){
         let o = obstacles[i];
 
         o.y += o.speed;
+        o.rotate += 2;
+
+        ctx.save();
+        ctx.translate(o.x,o.y);
+        ctx.rotate(o.rotate * Math.PI/180);
 
         if(o.type === "asteroid"){
-            ctx.fillStyle = "#8c8c8c";
+
+            ctx.fillStyle = "#5c5c5c";
+
             ctx.beginPath();
-            ctx.arc(o.x,o.y,35,0,Math.PI*2);
+
+            for(let a=0;a<7;a++){
+
+                let angle = (Math.PI*2/7)*a;
+                let radius = 35 + Math.random()*10;
+
+                ctx.lineTo(
+                    Math.cos(angle)*radius,
+                    Math.sin(angle)*radius
+                );
+            }
+
             ctx.fill();
         }
 
         else if(o.type === "comet"){
-            ctx.fillStyle = "#ff9933";
-            ctx.beginPath();
-            ctx.arc(o.x,o.y,28,0,Math.PI*2);
-            ctx.fill();
 
-            ctx.fillStyle = "#ffdd55";
-            ctx.fillRect(o.x-60,o.y-8,60,16);
+            let tail = ctx.createLinearGradient(-80,0,0,0);
+
+            tail.addColorStop(0,"rgba(255,150,0,0)");
+            tail.addColorStop(1,"#ff9900");
+
+            ctx.fillStyle = tail;
+            ctx.fillRect(-100,-10,100,20);
+
+            ctx.beginPath();
+            ctx.arc(0,0,26,0,Math.PI*2);
+            ctx.fillStyle = "#ffcc55";
+            ctx.fill();
         }
 
         else{
-            ctx.fillStyle = "#00ff66";
-            ctx.fillRect(o.x-35,o.y-15,70,30);
+
+            ctx.fillStyle = "#00ff88";
+
             ctx.beginPath();
-            ctx.arc(o.x,o.y-15,20,0,Math.PI*2);
+            ctx.ellipse(0,0,40,18,0,0,Math.PI*2);
+            ctx.fill();
+
+            ctx.fillStyle = "#baffff";
+
+            ctx.beginPath();
+            ctx.arc(0,-10,12,0,Math.PI*2);
             ctx.fill();
         }
 
-        if(checkCollision(player,o)){
+        ctx.restore();
+
+        if(collision(player,o)){
+
             lives--;
+
             updateLives();
 
             obstacles.splice(i,1);
@@ -459,20 +582,24 @@ function updateObstacles(){
             }
         }
 
-        if(o.y > canvas.height){
+        if(o.y > canvas.height+100){
+
             obstacles.splice(i,1);
+
             score++;
+
             updateScore();
         }
     }
 }
 
-function checkCollision(a,b){
+function collision(a,b){
+
     return(
-        a.x < b.x + b.width &&
-        a.x + a.width > b.x - b.width/2 &&
-        a.y < b.y + b.height &&
-        a.y + a.height > b.y - b.height/2
+        a.x < b.x + 50 &&
+        a.x + a.width > b.x - 50 &&
+        a.y < b.y + 50 &&
+        a.y + a.height > b.y - 50
     );
 }
 
@@ -485,54 +612,116 @@ function updateLives(){
 }
 
 function gameOver(){
-    clearInterval(gameLoop);
+
+    clearInterval(roundTimer);
+
     gameStarted = false;
 
     document.getElementById("gameOverScreen").style.display = "flex";
 }
 
 function restartRound(){
+
     document.getElementById("gameOverScreen").style.display = "none";
-    lives = 3;
+
     startRound(round);
 }
 
 function nextRound(){
 
-    clearInterval(gameLoop);
+    clearInterval(roundTimer);
+
     gameStarted = false;
 
     if(round < 3){
+
         round++;
+
+        player.speed += 1;
+
         startRound(round);
     }
     else{
-        endGame();
+
+        finalCelebration();
     }
 }
 
-function endGame(){
+function finalCelebration(){
 
     document.getElementById("finalScreen").style.display = "flex";
 
     document.getElementById("winnerName").innerHTML =
-        "Captain: <b>" + playerName + "</b>";
+        "<h2>"+playerName+"</h2>";
 
     document.getElementById("finalScore").innerHTML =
-        "FINAL SCORE: " + score;
+        "FINAL SCORE : " + score;
 
-    createFireworks();
+    setInterval(()=>{
 
-    setInterval(createFireworks,500);
+        for(let i=0;i<100;i++){
+
+            particles.push({
+                x:Math.random()*canvas.width,
+                y:Math.random()*canvas.height/2,
+                radius:Math.random()*4,
+                dx:(Math.random()-0.5)*8,
+                dy:(Math.random()-0.5)*8,
+                alpha:1
+            });
+        }
+
+    },500);
+
+    animateFireworks();
+}
+
+function animateFireworks(){
+
+    function loop(){
+
+        ctx.fillStyle = "rgba(0,0,0,0.2)";
+        ctx.fillRect(0,0,canvas.width,canvas.height);
+
+        for(let i=particles.length-1;i>=0;i--){
+
+            let p = particles[i];
+
+            ctx.beginPath();
+
+            ctx.arc(p.x,p.y,p.radius,0,Math.PI*2);
+
+            ctx.fillStyle =
+            `rgba(${Math.random()*255},
+            ${Math.random()*255},
+            ${Math.random()*255},
+            ${p.alpha})`;
+
+            ctx.fill();
+
+            p.x += p.dx;
+            p.y += p.dy;
+
+            p.alpha -= 0.01;
+
+            if(p.alpha <=0){
+                particles.splice(i,1);
+            }
+        }
+
+        requestAnimationFrame(loop);
+    }
+
+    loop();
 }
 
 function spawnGun(){
+
     gunSpawned = true;
 
     gunItem = {
-        x: Math.random()*(canvas.width-80),
-        y: -50,
-        size:40
+        x:Math.random()*(canvas.width-120),
+        y:-50
     };
 }
 
@@ -540,32 +729,53 @@ function updateGun(){
 
     if(gunItem){
 
-        gunItem.y += 4;
+        gunItem.y += 5;
 
-        ctx.fillStyle = "#00ff99";
-        ctx.fillRect(gunItem.x, gunItem.y, 40, 12);
+        // realistic blaster
+        ctx.save();
 
-        ctx.fillStyle = "#ccff00";
-        ctx.fillRect(gunItem.x+25, gunItem.y-8, 12, 28);
+        ctx.translate(gunItem.x,gunItem.y);
+
+        ctx.fillStyle = "#222";
+        ctx.fillRect(0,0,70,16);
+
+        ctx.fillStyle = "#00eaff";
+        ctx.fillRect(50,3,25,10);
+
+        ctx.fillStyle = "#444";
+        ctx.fillRect(18,14,12,22);
+
+        ctx.fillStyle = "#999";
+        ctx.fillRect(5,-5,20,5);
+
+        ctx.shadowBlur = 20;
+        ctx.shadowColor = "#00eaff";
+
+        ctx.fillStyle = "#00ffff";
+        ctx.fillRect(48,2,18,12);
+
+        ctx.restore();
 
         if(
-            player.x < gunItem.x + 40 &&
-            player.x + player.width > gunItem.x &&
-            player.y < gunItem.y + 40 &&
-            player.y + player.height > gunItem.y
+            player.x < gunItem.x+70 &&
+            player.x+player.width > gunItem.x &&
+            player.y < gunItem.y+30 &&
+            player.y+player.height > gunItem.y
         ){
+
             gunPower = true;
-            gunTimer = 60 * 15;
+            gunTimer = 60*15;
             gunItem = null;
         }
     }
 }
 
 function shootBullet(){
+
     bullets.push({
-        x: player.x + player.width/2,
-        y: player.y,
-        speed:10
+        x:player.x+40,
+        y:player.y,
+        speed:14
     });
 }
 
@@ -577,108 +787,82 @@ function updateBullets(){
 
         b.y -= b.speed;
 
+        ctx.shadowBlur = 20;
+        ctx.shadowColor = "#00ffff";
+
         ctx.fillStyle = "#00ffff";
-        ctx.fillRect(b.x,b.y,6,20);
+        ctx.fillRect(b.x,b.y,6,24);
+
+        ctx.shadowBlur = 0;
 
         for(let j=obstacles.length-1;j>=0;j--){
 
             let o = obstacles[j];
 
             if(
-                b.x < o.x + o.width &&
-                b.x > o.x - o.width/2 &&
-                b.y < o.y + o.height &&
-                b.y > o.y - o.height/2
+                b.x < o.x+50 &&
+                b.x > o.x-50 &&
+                b.y < o.y+50 &&
+                b.y > o.y-50
             ){
+
                 obstacles.splice(j,1);
                 bullets.splice(i,1);
+
                 score++;
+
                 updateScore();
+
                 break;
             }
         }
     }
 }
 
-function createFireworks(){
+let keys = {};
 
-    for(let i=0;i<50;i++){
+document.addEventListener("keydown",e=>{
 
-        fireworks.push({
-            x: Math.random()*canvas.width,
-            y: Math.random()*canvas.height/2,
-            radius:Math.random()*4,
-            speedX:(Math.random()-0.5)*8,
-            speedY:(Math.random()-0.5)*8,
-            alpha:1
-        });
+    keys[e.key] = true;
+
+    if(e.key === " " && gunPower){
+        shootBullet();
     }
+});
 
-    animateFireworks();
-}
-
-function animateFireworks(){
-
-    let interval = setInterval(()=>{
-
-        ctx.fillStyle = "rgba(0,0,0,0.2)";
-        ctx.fillRect(0,0,canvas.width,canvas.height);
-
-        fireworks.forEach((f,index)=>{
-
-            ctx.beginPath();
-            ctx.arc(f.x,f.y,f.radius,0,Math.PI*2);
-
-            ctx.fillStyle =
-                `rgba(${Math.random()*255},
-                ${Math.random()*255},
-                ${Math.random()*255},
-                ${f.alpha})`;
-
-            ctx.fill();
-
-            f.x += f.speedX;
-            f.y += f.speedY;
-
-            f.alpha -= 0.01;
-
-            if(f.alpha <=0){
-                fireworks.splice(index,1);
-            }
-        });
-
-    },1000/60);
-}
-
-let leftPressed = false;
-let rightPressed = false;
+document.addEventListener("keyup",e=>{
+    keys[e.key] = false;
+});
 
 const leftBtn = document.getElementById("leftBtn");
 const rightBtn = document.getElementById("rightBtn");
 const shootBtn = document.getElementById("shootBtn");
 
-leftBtn.addEventListener("touchstart", ()=> leftPressed = true);
-leftBtn.addEventListener("touchend", ()=> leftPressed = false);
+leftBtn.onmousedown = ()=> leftPressed = true;
+leftBtn.onmouseup = ()=> leftPressed = false;
 
-rightBtn.addEventListener("touchstart", ()=> rightPressed = true);
-rightBtn.addEventListener("touchend", ()=> rightPressed = false);
+rightBtn.onmousedown = ()=> rightPressed = true;
+rightBtn.onmouseup = ()=> rightPressed = false;
 
-leftBtn.addEventListener("mousedown", ()=> leftPressed = true);
-leftBtn.addEventListener("mouseup", ()=> leftPressed = false);
+leftBtn.ontouchstart = ()=> leftPressed = true;
+leftBtn.ontouchend = ()=> leftPressed = false;
 
-rightBtn.addEventListener("mousedown", ()=> rightPressed = true);
-rightBtn.addEventListener("mouseup", ()=> rightPressed = false);
+rightBtn.ontouchstart = ()=> rightPressed = true;
+rightBtn.ontouchend = ()=> rightPressed = false;
 
-shootBtn.addEventListener("click", ()=>{
+shootBtn.onclick = ()=>{
+
     if(gunPower){
         shootBullet();
     }
-});
+};
 
-window.addEventListener("resize", ()=>{
+window.addEventListener("resize",()=>{
+
     canvas.width = window.innerWidth;
     canvas.height = window.innerHeight;
 });
+
 </script>
 
 </body>
