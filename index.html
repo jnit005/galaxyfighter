@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Galaxy Wars</title>
+<title>Galaxy Hoverboard Wars</title>
 
 <style>
 
@@ -168,7 +168,7 @@ button{
 <div id="startScreen">
     <h1>GALAXY HOVERBOARD WARS</h1>
     <input type="text" id="playerName" placeholder="Enter Your Name">
-    <button onclick="startGame()">START GAME</button>
+    <button id="startBtn">START GAME</button>
 </div>
 
 <div id="roundText"></div>
@@ -200,8 +200,9 @@ button{
 
 <canvas id="gameCanvas"></canvas>
 
-<audio id="bgMusic" preload="auto" loop crossorigin="anonymous">
-<source src="https://raw.githubusercontent.com/jnit005/galaxyfighter/main/Apogee%20_%20Empyrion%20-%20Galactic%20Survival%20_%20Official%20Soundtrack.mp3" type="audio/mpeg">
+<!-- FIXED AUDIO -->
+<audio id="bgMusic" loop>
+    <source src="https://raw.githubusercontent.com/jnit005/galaxyfighter/main/Apogee%20_%20Empyrion%20-%20Galactic%20Survival%20_%20Official%20Soundtrack.mp3" type="audio/mpeg">
 </audio>
 
 <script>
@@ -267,6 +268,8 @@ for(let i=0;i<35;i++){
     });
 }
 
+document.getElementById("startBtn").addEventListener("click", startGame);
+
 function startGame(){
 
     playerName = document.getElementById("playerName").value.trim();
@@ -279,14 +282,16 @@ function startGame(){
     document.getElementById("startScreen").style.display = "none";
     document.getElementById("usernameHUD").innerText = playerName;
 
-    // FIXED AUDIO
-    bgMusic.volume = 0.45;
+    // REAL AUDIO FIX
+    bgMusic.volume = 0.5;
 
-    const playPromise = bgMusic.play();
-
-    if(playPromise !== undefined){
-        playPromise.catch(()=>{});
-    }
+    bgMusic.play()
+    .then(()=>{
+        console.log("Music Playing");
+    })
+    .catch((err)=>{
+        console.log("Audio Error:", err);
+    });
 
     startRound(round);
 }
@@ -388,8 +393,6 @@ function drawGalaxy(){
     ctx.fillStyle = gradient;
     ctx.fillRect(0,0,canvas.width,canvas.height);
 
-    // realistic nebula
-
     nebulaParticles.forEach(n=>{
 
         let g = ctx.createRadialGradient(
@@ -406,8 +409,6 @@ function drawGalaxy(){
         ctx.arc(n.x,n.y,n.radius,0,Math.PI*2);
         ctx.fill();
     });
-
-    // spiral galaxy
 
     ctx.save();
 
@@ -432,8 +433,6 @@ function drawGalaxy(){
 
     ctx.restore();
 
-    // moving stars
-
     for(let star of stars){
 
         ctx.beginPath();
@@ -450,26 +449,6 @@ function drawGalaxy(){
             star.x = Math.random()*canvas.width;
         }
     }
-
-    // glowing planet
-
-    let planetGlow = ctx.createRadialGradient(
-        canvas.width-130,
-        130,
-        20,
-        canvas.width-130,
-        130,
-        100
-    );
-
-    planetGlow.addColorStop(0,"#ffdd66");
-    planetGlow.addColorStop(1,"rgba(255,120,0,0)");
-
-    ctx.fillStyle = planetGlow;
-
-    ctx.beginPath();
-    ctx.arc(canvas.width-130,130,100,0,Math.PI*2);
-    ctx.fill();
 }
 
 function movePlayer(){
@@ -486,8 +465,6 @@ function movePlayer(){
 }
 
 function drawPlayer(){
-
-    // hoverboard glow
 
     ctx.shadowBlur = 25;
     ctx.shadowColor = "#00eaff";
@@ -510,19 +487,13 @@ function drawPlayer(){
 
     ctx.shadowBlur = 0;
 
-    // legs
-
     ctx.fillStyle = "#2955ff";
     ctx.fillRect(player.x+24,player.y+52,18,42);
     ctx.fillRect(player.x+46,player.y+52,18,42);
 
-    // shoes
-
     ctx.fillStyle = "#fff";
     ctx.fillRect(player.x+22,player.y+88,20,8);
     ctx.fillRect(player.x+46,player.y+88,20,8);
-
-    // jacket
 
     let jacket = ctx.createLinearGradient(
         player.x,
@@ -537,36 +508,24 @@ function drawPlayer(){
     ctx.fillStyle = jacket;
     ctx.fillRect(player.x+16,player.y+10,50,48);
 
-    // backpack
-
     ctx.fillStyle = "#111";
     ctx.fillRect(player.x+8,player.y+16,16,34);
-
-    // arms
 
     ctx.fillStyle = "#dba27b";
     ctx.fillRect(player.x+8,player.y+18,12,30);
     ctx.fillRect(player.x+64,player.y+18,12,30);
 
-    // neck
-
     ctx.fillRect(player.x+34,player.y+2,10,10);
-
-    // face
 
     ctx.beginPath();
     ctx.arc(player.x+40,player.y,18,0,Math.PI*2);
     ctx.fillStyle = "#f2c19b";
     ctx.fill();
 
-    // cap
-
     ctx.fillStyle = "#ff003c";
     ctx.fillRect(player.x+23,player.y-14,34,11);
 
     ctx.fillRect(player.x+50,player.y-10,14,5);
-
-    // eyes
 
     ctx.fillStyle = "black";
     ctx.fillRect(player.x+34,player.y-2,3,3);
@@ -574,8 +533,6 @@ function drawPlayer(){
 }
 
 function spawnObstacle(){
-
-    // MORE realistic traffic
 
     let rate = 0.04 + (round*0.012);
 
@@ -610,8 +567,6 @@ function updateObstacles(){
         ctx.translate(o.x,o.y);
         ctx.rotate(o.rotation*Math.PI/180);
 
-        // REALISTIC ASTEROID
-
         if(o.type === "asteroid"){
 
             ctx.beginPath();
@@ -636,8 +591,6 @@ function updateObstacles(){
             ctx.fill();
         }
 
-        // REALISTIC COMET
-
         else if(o.type === "comet"){
 
             let tail = ctx.createLinearGradient(-120,0,20,0);
@@ -660,8 +613,6 @@ function updateObstacles(){
             ctx.arc(0,0,34,0,Math.PI*2);
             ctx.fill();
         }
-
-        // REALISTIC SPACESHIP
 
         else{
 
@@ -793,8 +744,6 @@ function updateGun(){
 
         ctx.translate(gunItem.x,gunItem.y);
 
-        // realistic gun
-
         let gunGradient = ctx.createLinearGradient(0,0,70,0);
 
         gunGradient.addColorStop(0,"#1e1e1e");
@@ -892,63 +841,6 @@ function finalCelebration(){
 
     document.getElementById("finalScore").innerHTML =
         "FINAL SCORE : " + score;
-
-    setInterval(()=>{
-
-        for(let i=0;i<100;i++){
-
-            fireworks.push({
-                x:Math.random()*canvas.width,
-                y:Math.random()*canvas.height/2,
-                radius:Math.random()*4,
-                dx:(Math.random()-0.5)*8,
-                dy:(Math.random()-0.5)*8,
-                alpha:1
-            });
-        }
-
-    },500);
-
-    animateFireworks();
-}
-
-function animateFireworks(){
-
-    function loop(){
-
-        ctx.fillStyle = "rgba(0,0,0,0.15)";
-        ctx.fillRect(0,0,canvas.width,canvas.height);
-
-        for(let i=fireworks.length-1;i>=0;i--){
-
-            let f = fireworks[i];
-
-            ctx.beginPath();
-
-            ctx.arc(f.x,f.y,f.radius,0,Math.PI*2);
-
-            ctx.fillStyle =
-            `rgba(${Math.random()*255},
-            ${Math.random()*255},
-            ${Math.random()*255},
-            ${f.alpha})`;
-
-            ctx.fill();
-
-            f.x += f.dx;
-            f.y += f.dy;
-
-            f.alpha -= 0.01;
-
-            if(f.alpha <=0){
-                fireworks.splice(i,1);
-            }
-        }
-
-        requestAnimationFrame(loop);
-    }
-
-    loop();
 }
 
 document.addEventListener("keydown",e=>{
