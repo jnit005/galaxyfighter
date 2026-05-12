@@ -1,0 +1,685 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Galaxy Hoverboard Wars</title>
+
+<style>
+*{
+    margin:0;
+    padding:0;
+    box-sizing:border-box;
+    font-family:Arial, Helvetica, sans-serif;
+}
+
+body{
+    overflow:hidden;
+    background:black;
+}
+
+canvas{
+    display:block;
+    background: radial-gradient(circle at top, #25124f, #070014 70%);
+}
+
+#startScreen,
+#gameOverScreen,
+#finalScreen,
+#roundText{
+    position:absolute;
+    width:100%;
+    height:100%;
+    display:flex;
+    justify-content:center;
+    align-items:center;
+    flex-direction:column;
+    z-index:10;
+    color:white;
+}
+
+#startScreen{
+    background:black;
+}
+
+#startScreen h1{
+    font-size:60px;
+    margin-bottom:25px;
+    color:#00e5ff;
+    text-shadow:0 0 20px #00e5ff;
+}
+
+#playerName{
+    padding:16px;
+    width:300px;
+    font-size:22px;
+    border:none;
+    border-radius:12px;
+    outline:none;
+    text-align:center;
+}
+
+button{
+    margin-top:20px;
+    padding:14px 35px;
+    font-size:22px;
+    border:none;
+    border-radius:12px;
+    cursor:pointer;
+    background:#00e5ff;
+    color:black;
+    font-weight:bold;
+}
+
+#roundText{
+    font-size:70px;
+    font-weight:bold;
+    text-shadow:0 0 25px white;
+    display:none;
+}
+
+#gameOverScreen{
+    display:none;
+    background:rgba(0,0,0,0.85);
+}
+
+#gameOverScreen h1{
+    font-size:70px;
+    color:red;
+    margin-bottom:20px;
+}
+
+#finalScreen{
+    display:none;
+    background:rgba(0,0,0,0.95);
+}
+
+#finalScreen h1{
+    font-size:90px;
+    margin-bottom:20px;
+    color:#00ffcc;
+}
+
+#finalScore{
+    font-size:50px;
+    margin-top:15px;
+}
+
+#hud{
+    position:absolute;
+    top:0;
+    width:100%;
+    display:flex;
+    justify-content:space-between;
+    padding:18px 30px;
+    color:white;
+    z-index:5;
+    font-size:30px;
+    font-weight:bold;
+    text-shadow:0 0 10px black;
+}
+
+#lives{
+    position:absolute;
+    top:70px;
+    left:30px;
+    color:#ff4f4f;
+    font-size:28px;
+    z-index:5;
+    font-weight:bold;
+}
+
+#controls{
+    position:absolute;
+    bottom:25px;
+    width:100%;
+    display:flex;
+    justify-content:center;
+    gap:25px;
+    z-index:6;
+}
+
+.controlBtn{
+    width:90px;
+    height:90px;
+    border-radius:50%;
+    background:rgba(255,255,255,0.15);
+    border:3px solid white;
+    color:white;
+    font-size:38px;
+    font-weight:bold;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    user-select:none;
+    backdrop-filter: blur(5px);
+}
+
+#gunTimer{
+    position:absolute;
+    top:110px;
+    right:30px;
+    color:#00ff99;
+    font-size:24px;
+    font-weight:bold;
+    z-index:6;
+}
+
+</style>
+</head>
+<body>
+
+<div id="startScreen">
+    <h1>GALAXY HOVERBOARD WARS</h1>
+    <input type="text" id="playerName" placeholder="Enter Your Name"/>
+    <button onclick="startGame()">START GAME</button>
+</div>
+
+<div id="roundText"></div>
+
+<div id="gameOverScreen">
+    <h1>GAME OVER</h1>
+    <button onclick="restartRound()">Restart Round</button>
+</div>
+
+<div id="finalScreen">
+    <h1>MISSION COMPLETE</h1>
+    <div id="winnerName"></div>
+    <div id="finalScore"></div>
+</div>
+
+<div id="hud">
+    <div id="score">Score: 0</div>
+    <div id="usernameHUD"></div>
+</div>
+
+<div id="lives">Lives: 3</div>
+<div id="gunTimer"></div>
+
+<div id="controls">
+    <div class="controlBtn" id="leftBtn">◀</div>
+    <div class="controlBtn" id="rightBtn">▶</div>
+    <div class="controlBtn" id="shootBtn">✦</div>
+</div>
+
+<canvas id="gameCanvas"></canvas>
+
+<script>
+const canvas = document.getElementById("gameCanvas");
+const ctx = canvas.getContext("2d");
+
+canvas.width = window.innerWidth;
+canvas.height = window.innerHeight;
+
+let gameStarted = false;
+let playerName = "";
+let score = 0;
+let round = 1;
+let roundTime = 45;
+let timeLeft = roundTime;
+let lives = 3;
+let gameLoop;
+let obstacles = [];
+let bullets = [];
+let stars = [];
+let fireworks = [];
+let keys = {};
+let gunPower = false;
+let gunTimer = 0;
+let gunItem = null;
+let gunSpawned = false;
+
+const player = {
+    x: canvas.width/2,
+    y: canvas.height - 150,
+    width: 70,
+    height: 90,
+    speed: 8
+};
+
+for(let i=0;i<250;i++){
+    stars.push({
+        x: Math.random()*canvas.width,
+        y: Math.random()*canvas.height,
+        size: Math.random()*3
+    });
+}
+
+document.addEventListener("keydown", e=>{
+    keys[e.key] = true;
+
+    if(e.key === " " && gunPower){
+        shootBullet();
+    }
+});
+
+document.addEventListener("keyup", e=>{
+    keys[e.key] = false;
+});
+
+function startGame(){
+    playerName = document.getElementById("playerName").value.trim();
+
+    if(playerName === ""){
+        alert("Enter player name");
+        return;
+    }
+
+    document.getElementById("startScreen").style.display = "none";
+    document.getElementById("usernameHUD").innerText = playerName;
+
+    startRound(round);
+}
+
+function startRound(r){
+    obstacles = [];
+    bullets = [];
+    gunItem = null;
+    gunSpawned = false;
+    timeLeft = roundTime;
+    lives = 3;
+    updateLives();
+
+    showRoundText("ROUND " + r + " BEGINS");
+
+    setTimeout(()=>{
+        gameStarted = true;
+        gameLoop = setInterval(updateGame,1000/60);
+        setInterval(()=>{
+            if(gameStarted){
+                timeLeft--;
+
+                if(timeLeft === 22 && !gunSpawned){
+                    spawnGun();
+                }
+
+                if(timeLeft <= 0){
+                    nextRound();
+                }
+            }
+        },1000);
+    },2500);
+}
+
+function showRoundText(text){
+    const el = document.getElementById("roundText");
+    el.innerText = text;
+    el.style.display = "flex";
+
+    setTimeout(()=>{
+        el.style.display = "none";
+    },2000);
+}
+
+function updateGame(){
+    ctx.clearRect(0,0,canvas.width,canvas.height);
+
+    drawBackground();
+
+    movePlayer();
+
+    drawPlayer();
+
+    spawnObstacles();
+
+    updateObstacles();
+
+    updateBullets();
+
+    updateGun();
+
+    drawSun();
+
+    if(gunPower){
+        gunTimer--;
+
+        document.getElementById("gunTimer").innerText =
+            "Blaster: " + Math.floor(gunTimer/60) + "s";
+
+        if(gunTimer <= 0){
+            gunPower = false;
+            document.getElementById("gunTimer").innerText = "";
+        }
+    }
+}
+
+function drawBackground(){
+    for(let star of stars){
+        ctx.fillStyle = "white";
+        ctx.beginPath();
+        ctx.arc(star.x,star.y,star.size,0,Math.PI*2);
+        ctx.fill();
+
+        star.y += 0.5;
+
+        if(star.y > canvas.height){
+            star.y = 0;
+            star.x = Math.random()*canvas.width;
+        }
+    }
+}
+
+function drawSun(){
+    ctx.beginPath();
+    ctx.arc(canvas.width-120,120,60,0,Math.PI*2);
+    ctx.fillStyle = "#ff9933";
+    ctx.shadowBlur = 30;
+    ctx.shadowColor = "#ff6600";
+    ctx.fill();
+    ctx.shadowBlur = 0;
+}
+
+function movePlayer(){
+    if(keys["ArrowLeft"] || leftPressed){
+        player.x -= player.speed;
+    }
+
+    if(keys["ArrowRight"] || rightPressed){
+        player.x += player.speed;
+    }
+
+    player.x = Math.max(0, Math.min(canvas.width-player.width, player.x));
+}
+
+function drawPlayer(){
+    ctx.fillStyle = "#00e5ff";
+
+    ctx.beginPath();
+    ctx.roundRect(player.x, player.y, player.width, player.height, 15);
+    ctx.fill();
+
+    ctx.fillStyle = "#ff00ff";
+    ctx.fillRect(player.x-10, player.y+65, player.width+20, 12);
+
+    ctx.fillStyle = "white";
+    ctx.fillRect(player.x+10, player.y+15, 15,15);
+    ctx.fillRect(player.x+45, player.y+15, 15,15);
+}
+
+function spawnObstacles(){
+
+    let spawnRate = 0.025 + (round * 0.01);
+
+    if(Math.random() < spawnRate){
+
+        let type = ["asteroid","comet","alien"][Math.floor(Math.random()*3)];
+
+        obstacles.push({
+            x: Math.random()*(canvas.width-80),
+            y: -100,
+            width: 70,
+            height: 70,
+            speed: 4 + round * 1.2,
+            type:type
+        });
+    }
+}
+
+function updateObstacles(){
+
+    for(let i=obstacles.length-1;i>=0;i--){
+
+        let o = obstacles[i];
+
+        o.y += o.speed;
+
+        if(o.type === "asteroid"){
+            ctx.fillStyle = "#8c8c8c";
+            ctx.beginPath();
+            ctx.arc(o.x,o.y,35,0,Math.PI*2);
+            ctx.fill();
+        }
+
+        else if(o.type === "comet"){
+            ctx.fillStyle = "#ff9933";
+            ctx.beginPath();
+            ctx.arc(o.x,o.y,28,0,Math.PI*2);
+            ctx.fill();
+
+            ctx.fillStyle = "#ffdd55";
+            ctx.fillRect(o.x-60,o.y-8,60,16);
+        }
+
+        else{
+            ctx.fillStyle = "#00ff66";
+            ctx.fillRect(o.x-35,o.y-15,70,30);
+            ctx.beginPath();
+            ctx.arc(o.x,o.y-15,20,0,Math.PI*2);
+            ctx.fill();
+        }
+
+        if(checkCollision(player,o)){
+            lives--;
+            updateLives();
+
+            obstacles.splice(i,1);
+
+            if(lives <=0){
+                gameOver();
+            }
+        }
+
+        if(o.y > canvas.height){
+            obstacles.splice(i,1);
+            score++;
+            updateScore();
+        }
+    }
+}
+
+function checkCollision(a,b){
+    return(
+        a.x < b.x + b.width &&
+        a.x + a.width > b.x - b.width/2 &&
+        a.y < b.y + b.height &&
+        a.y + a.height > b.y - b.height/2
+    );
+}
+
+function updateScore(){
+    document.getElementById("score").innerText = "Score: " + score;
+}
+
+function updateLives(){
+    document.getElementById("lives").innerText = "Lives: " + lives;
+}
+
+function gameOver(){
+    clearInterval(gameLoop);
+    gameStarted = false;
+
+    document.getElementById("gameOverScreen").style.display = "flex";
+}
+
+function restartRound(){
+    document.getElementById("gameOverScreen").style.display = "none";
+    lives = 3;
+    startRound(round);
+}
+
+function nextRound(){
+
+    clearInterval(gameLoop);
+    gameStarted = false;
+
+    if(round < 3){
+        round++;
+        startRound(round);
+    }
+    else{
+        endGame();
+    }
+}
+
+function endGame(){
+
+    document.getElementById("finalScreen").style.display = "flex";
+
+    document.getElementById("winnerName").innerHTML =
+        "Captain: <b>" + playerName + "</b>";
+
+    document.getElementById("finalScore").innerHTML =
+        "FINAL SCORE: " + score;
+
+    createFireworks();
+
+    setInterval(createFireworks,500);
+}
+
+function spawnGun(){
+    gunSpawned = true;
+
+    gunItem = {
+        x: Math.random()*(canvas.width-80),
+        y: -50,
+        size:40
+    };
+}
+
+function updateGun(){
+
+    if(gunItem){
+
+        gunItem.y += 4;
+
+        ctx.fillStyle = "#00ff99";
+        ctx.fillRect(gunItem.x, gunItem.y, 40, 12);
+
+        ctx.fillStyle = "#ccff00";
+        ctx.fillRect(gunItem.x+25, gunItem.y-8, 12, 28);
+
+        if(
+            player.x < gunItem.x + 40 &&
+            player.x + player.width > gunItem.x &&
+            player.y < gunItem.y + 40 &&
+            player.y + player.height > gunItem.y
+        ){
+            gunPower = true;
+            gunTimer = 60 * 15;
+            gunItem = null;
+        }
+    }
+}
+
+function shootBullet(){
+    bullets.push({
+        x: player.x + player.width/2,
+        y: player.y,
+        speed:10
+    });
+}
+
+function updateBullets(){
+
+    for(let i=bullets.length-1;i>=0;i--){
+
+        let b = bullets[i];
+
+        b.y -= b.speed;
+
+        ctx.fillStyle = "#00ffff";
+        ctx.fillRect(b.x,b.y,6,20);
+
+        for(let j=obstacles.length-1;j>=0;j--){
+
+            let o = obstacles[j];
+
+            if(
+                b.x < o.x + o.width &&
+                b.x > o.x - o.width/2 &&
+                b.y < o.y + o.height &&
+                b.y > o.y - o.height/2
+            ){
+                obstacles.splice(j,1);
+                bullets.splice(i,1);
+                score++;
+                updateScore();
+                break;
+            }
+        }
+    }
+}
+
+function createFireworks(){
+
+    for(let i=0;i<50;i++){
+
+        fireworks.push({
+            x: Math.random()*canvas.width,
+            y: Math.random()*canvas.height/2,
+            radius:Math.random()*4,
+            speedX:(Math.random()-0.5)*8,
+            speedY:(Math.random()-0.5)*8,
+            alpha:1
+        });
+    }
+
+    animateFireworks();
+}
+
+function animateFireworks(){
+
+    let interval = setInterval(()=>{
+
+        ctx.fillStyle = "rgba(0,0,0,0.2)";
+        ctx.fillRect(0,0,canvas.width,canvas.height);
+
+        fireworks.forEach((f,index)=>{
+
+            ctx.beginPath();
+            ctx.arc(f.x,f.y,f.radius,0,Math.PI*2);
+
+            ctx.fillStyle =
+                `rgba(${Math.random()*255},
+                ${Math.random()*255},
+                ${Math.random()*255},
+                ${f.alpha})`;
+
+            ctx.fill();
+
+            f.x += f.speedX;
+            f.y += f.speedY;
+
+            f.alpha -= 0.01;
+
+            if(f.alpha <=0){
+                fireworks.splice(index,1);
+            }
+        });
+
+    },1000/60);
+}
+
+let leftPressed = false;
+let rightPressed = false;
+
+const leftBtn = document.getElementById("leftBtn");
+const rightBtn = document.getElementById("rightBtn");
+const shootBtn = document.getElementById("shootBtn");
+
+leftBtn.addEventListener("touchstart", ()=> leftPressed = true);
+leftBtn.addEventListener("touchend", ()=> leftPressed = false);
+
+rightBtn.addEventListener("touchstart", ()=> rightPressed = true);
+rightBtn.addEventListener("touchend", ()=> rightPressed = false);
+
+leftBtn.addEventListener("mousedown", ()=> leftPressed = true);
+leftBtn.addEventListener("mouseup", ()=> leftPressed = false);
+
+rightBtn.addEventListener("mousedown", ()=> rightPressed = true);
+rightBtn.addEventListener("mouseup", ()=> rightPressed = false);
+
+shootBtn.addEventListener("click", ()=>{
+    if(gunPower){
+        shootBullet();
+    }
+});
+
+window.addEventListener("resize", ()=>{
+    canvas.width = window.innerWidth;
+    canvas.height = window.innerHeight;
+});
+</script>
+
+</body>
+</html>
