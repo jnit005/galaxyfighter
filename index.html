@@ -1,489 +1,177 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Galaxy Hoverboard Wars</title>
+<!-- REPLACE ONLY THESE PARTS IN YOUR EXISTING CODE -->
 
-<style>
-
-*{
-    margin:0;
-    padding:0;
-    box-sizing:border-box;
-    font-family:Arial, Helvetica, sans-serif;
-}
-
-body{
-    overflow:hidden;
-    background:black;
-}
-
-canvas{
-    display:block;
-    background:black;
-}
-
-#startScreen,
-#roundText,
-#gameOverScreen,
-#finalScreen{
-    position:absolute;
-    width:100%;
-    height:100%;
-    display:flex;
-    justify-content:center;
-    align-items:center;
-    flex-direction:column;
-    z-index:20;
-    color:white;
-}
-
-#startScreen{
-    background:radial-gradient(circle,#130026,#000);
-}
-
-#startScreen h1{
-    font-size:70px;
-    color:#00eaff;
-    margin-bottom:25px;
-    text-shadow:0 0 25px #00eaff;
-}
-
-#playerName{
-    padding:16px;
-    width:320px;
-    font-size:22px;
-    border-radius:12px;
-    border:none;
-    outline:none;
-    text-align:center;
-}
-
-button{
-    margin-top:20px;
-    padding:14px 40px;
-    font-size:22px;
-    border:none;
-    border-radius:12px;
-    cursor:pointer;
-    background:#00eaff;
-    color:black;
-    font-weight:bold;
-}
-
-#roundText{
-    font-size:80px;
-    display:none;
-    text-shadow:0 0 25px white;
-    font-weight:bold;
-}
-
-#gameOverScreen{
-    display:none;
-    background:rgba(0,0,0,0.85);
-}
-
-#gameOverScreen h1{
-    color:red;
-    font-size:90px;
-}
-
-#finalScreen{
-    display:none;
-    background:rgba(0,0,0,0.95);
-}
-
-#finalScreen h1{
-    font-size:90px;
-    color:#00ffcc;
-}
-
-#finalScore{
-    font-size:50px;
-    margin-top:20px;
-}
-
-#hud{
-    position:absolute;
-    top:0;
-    width:100%;
-    padding:20px 30px;
-    display:flex;
-    justify-content:space-between;
-    color:white;
-    font-size:32px;
-    font-weight:bold;
-    z-index:10;
-    text-shadow:0 0 10px black;
-}
-
-#lives{
-    position:absolute;
-    left:30px;
-    top:70px;
-    color:#ff5555;
-    font-size:28px;
-    z-index:10;
-    font-weight:bold;
-}
-
-#gunStatus{
-    position:absolute;
-    right:30px;
-    top:70px;
-    color:#00ff99;
-    font-size:26px;
-    z-index:10;
-    font-weight:bold;
-}
-
-#controls{
-    position:absolute;
-    bottom:25px;
-    width:100%;
-    display:flex;
-    justify-content:center;
-    gap:25px;
-    z-index:10;
-}
-
-.controlBtn{
-    width:90px;
-    height:90px;
-    border-radius:50%;
-    border:3px solid white;
-    background:rgba(255,255,255,0.12);
-    color:white;
-    font-size:38px;
-    display:flex;
-    justify-content:center;
-    align-items:center;
-    user-select:none;
-    backdrop-filter:blur(5px);
-}
-
-</style>
-</head>
-<body>
-
-<div id="startScreen">
-    <h1>GALAXY HOVERBOARD WARS</h1>
-    <input type="text" id="playerName" placeholder="Enter Your Name">
-    <button onclick="startGame()">START GAME</button>
-</div>
-
-<div id="roundText"></div>
-
-<div id="gameOverScreen">
-    <h1>GAME OVER</h1>
-    <button onclick="restartRound()">Restart Round</button>
-</div>
-
-<div id="finalScreen">
-    <h1>MISSION COMPLETE</h1>
-    <div id="winnerName"></div>
-    <div id="finalScore"></div>
-</div>
-
-<div id="hud">
-    <div id="score">Score: 0</div>
-    <div id="usernameHUD"></div>
-</div>
-
-<div id="lives">Lives: 3</div>
-<div id="gunStatus"></div>
-
-<div id="controls">
-    <div class="controlBtn" id="leftBtn">◀</div>
-    <div class="controlBtn" id="rightBtn">▶</div>
-    <div class="controlBtn" id="shootBtn">✦</div>
-</div>
-
-<canvas id="gameCanvas"></canvas>
-
-<audio id="bgMusic" loop>
-<source src="https://raw.githubusercontent.com/jnit005/galaxyfighter/main/Apogee%20_%20Empyrion%20-%20Galactic%20Survival%20_%20Official%20Soundtrack.mp3" type="audio/mp3">
-</audio>
+<!-- ========================================= -->
+<!-- 1. ADD THESE IMAGE PRELOADS BELOW AUDIO -->
+<!-- ========================================= -->
 
 <script>
 
-const canvas = document.getElementById("gameCanvas");
-const ctx = canvas.getContext("2d");
+const asteroidImg = new Image();
+asteroidImg.src = "https://raw.githubusercontent.com/jnit005/galaxyfighter/main/aster.png";
 
-canvas.width = window.innerWidth;
-canvas.height = window.innerHeight;
+const cometImg = new Image();
+cometImg.src = "https://raw.githubusercontent.com/jnit005/galaxyfighter/main/com.png";
 
-const bgMusic = document.getElementById("bgMusic");
+const gunImg = new Image();
+gunImg.src = "https://raw.githubusercontent.com/jnit005/galaxyfighter/main/gun.jpg";
 
-let gameStarted = false;
-let playerName = "";
-let score = 0;
-let round = 1;
-let lives = 3;
-let roundTime = 45;
-let timer = roundTime;
+const spaceshipImg = new Image();
+spaceshipImg.src = "https://raw.githubusercontent.com/jnit005/galaxyfighter/main/spoaceship.png";
 
-let obstacles = [];
-let bullets = [];
-let particles = [];
-let stars = [];
+const playerImg = new Image();
+playerImg.src = "https://raw.githubusercontent.com/jnit005/galaxyfighter/main/game%20user%20icon.gif";
 
-let leftPressed = false;
-let rightPressed = false;
+</script>
 
-let gunPower = false;
-let gunTimer = 0;
-let gunItem = null;
-let gunSpawned = false;
 
-const player = {
-    x: canvas.width/2,
-    y: canvas.height - 180,
-    width: 80,
-    height: 110,
-    speed: 10
-};
+<!-- ========================================= -->
+<!-- 2. REPLACE drawGalaxyBackground FUNCTION -->
+<!-- ========================================= -->
 
-for(let i=0;i<400;i++){
-    stars.push({
-        x:Math.random()*canvas.width,
-        y:Math.random()*canvas.height,
-        size:Math.random()*3,
-        speed:Math.random()*4 + 1
-    });
-}
-
-function startGame(){
-
-    playerName = document.getElementById("playerName").value;
-
-    if(playerName.trim() === ""){
-        alert("Enter player name");
-        return;
-    }
-
-    bgMusic.volume = 0.4;
-    bgMusic.play();
-
-    document.getElementById("startScreen").style.display = "none";
-    document.getElementById("usernameHUD").innerText = playerName;
-
-    startRound(round);
-}
-
-function startRound(r){
-
-    obstacles = [];
-    bullets = [];
-    gunItem = null;
-    gunSpawned = false;
-    gunPower = false;
-    timer = roundTime;
-    lives = 3;
-
-    updateLives();
-
-    showRoundText("ROUND " + r);
-
-    setTimeout(()=>{
-        gameStarted = true;
-        requestAnimationFrame(gameLoop);
-
-        roundTimer = setInterval(()=>{
-
-            timer--;
-
-            if(timer === 22 && !gunSpawned){
-                spawnGun();
-            }
-
-            if(timer <= 0){
-                nextRound();
-            }
-
-        },1000);
-
-    },2200);
-}
-
-function showRoundText(text){
-
-    const rt = document.getElementById("roundText");
-
-    rt.innerText = text;
-    rt.style.display = "flex";
-
-    setTimeout(()=>{
-        rt.style.display = "none";
-    },2000);
-}
-
-function gameLoop(){
-
-    if(!gameStarted) return;
-
-    ctx.clearRect(0,0,canvas.width,canvas.height);
-
-    drawGalaxyBackground();
-
-    movePlayer();
-
-    drawPlayer();
-
-    spawnObstacle();
-
-    updateObstacles();
-
-    updateBullets();
-
-    updateGun();
-
-    drawSunPlanet();
-
-    if(gunPower){
-
-        gunTimer--;
-
-        document.getElementById("gunStatus").innerText =
-            "BLASTER: " + Math.floor(gunTimer/60) + "s";
-
-        if(gunTimer <=0){
-            gunPower = false;
-            document.getElementById("gunStatus").innerText = "";
-        }
-    }
-
-    requestAnimationFrame(gameLoop);
-}
+<script>
 
 function drawGalaxyBackground(){
 
+    // deep space base
     let gradient = ctx.createLinearGradient(0,0,0,canvas.height);
 
-    gradient.addColorStop(0,"#030014");
-    gradient.addColorStop(1,"#12002f");
+    gradient.addColorStop(0,"#02010f");
+    gradient.addColorStop(0.3,"#090022");
+    gradient.addColorStop(0.6,"#13002f");
+    gradient.addColorStop(1,"#02010f");
 
     ctx.fillStyle = gradient;
     ctx.fillRect(0,0,canvas.width,canvas.height);
 
+    // blue nebula
+    let nebula1 = ctx.createRadialGradient(
+        canvas.width*0.2,
+        canvas.height*0.3,
+        50,
+        canvas.width*0.2,
+        canvas.height*0.3,
+        500
+    );
+
+    nebula1.addColorStop(0,"rgba(0,180,255,0.28)");
+    nebula1.addColorStop(1,"rgba(0,0,0,0)");
+
+    ctx.fillStyle = nebula1;
+    ctx.fillRect(0,0,canvas.width,canvas.height);
+
+    // red nebula
+    let nebula2 = ctx.createRadialGradient(
+        canvas.width*0.8,
+        canvas.height*0.4,
+        50,
+        canvas.width*0.8,
+        canvas.height*0.4,
+        450
+    );
+
+    nebula2.addColorStop(0,"rgba(255,50,80,0.24)");
+    nebula2.addColorStop(1,"rgba(0,0,0,0)");
+
+    ctx.fillStyle = nebula2;
+    ctx.fillRect(0,0,canvas.width,canvas.height);
+
+    // purple galaxy
+    let nebula3 = ctx.createRadialGradient(
+        canvas.width*0.5,
+        canvas.height*0.7,
+        80,
+        canvas.width*0.5,
+        canvas.height*0.7,
+        600
+    );
+
+    nebula3.addColorStop(0,"rgba(150,0,255,0.22)");
+    nebula3.addColorStop(1,"rgba(0,0,0,0)");
+
+    ctx.fillStyle = nebula3;
+    ctx.fillRect(0,0,canvas.width,canvas.height);
+
+    // moving stars
     for(let star of stars){
 
         ctx.beginPath();
+
         ctx.fillStyle = "white";
+
         ctx.arc(star.x,star.y,star.size,0,Math.PI*2);
+
         ctx.fill();
 
         star.y += star.speed;
 
         if(star.y > canvas.height){
+
             star.y = 0;
             star.x = Math.random()*canvas.width;
         }
     }
 
-    for(let i=0;i<8;i++){
+    // distant galaxies
+    ctx.save();
+
+    ctx.translate(canvas.width*0.75, canvas.height*0.22);
+
+    ctx.rotate(Date.now()*0.00005);
+
+    for(let i=0;i<25;i++){
 
         ctx.beginPath();
-        ctx.arc(
-            Math.sin(Date.now()*0.0001+i)*canvas.width + canvas.width/2,
-            i*100,
-            120,
-            0,
-            Math.PI*2
-        );
 
-        ctx.fillStyle = "rgba(255,0,255,0.03)";
-        ctx.fill();
-    }
-}
+        ctx.strokeStyle = `rgba(180,180,255,${0.02+i*0.003})`;
 
-function drawSunPlanet(){
+        ctx.arc(0,0,i*8,0,Math.PI*1.7);
 
-    ctx.beginPath();
-    ctx.arc(canvas.width-130,120,60,0,Math.PI*2);
-
-    let g = ctx.createRadialGradient(
-        canvas.width-130,120,10,
-        canvas.width-130,120,70
-    );
-
-    g.addColorStop(0,"#ffcc55");
-    g.addColorStop(1,"#ff5500");
-
-    ctx.fillStyle = g;
-    ctx.shadowBlur = 40;
-    ctx.shadowColor = "#ff6600";
-    ctx.fill();
-    ctx.shadowBlur = 0;
-}
-
-function movePlayer(){
-
-    if(leftPressed || keys["ArrowLeft"]){
-        player.x -= player.speed;
+        ctx.stroke();
     }
 
-    if(rightPressed || keys["ArrowRight"]){
-        player.x += player.speed;
-    }
-
-    player.x = Math.max(0,Math.min(canvas.width-player.width,player.x));
+    ctx.restore();
 }
+
+</script>
+
+
+<!-- ========================================= -->
+<!-- 3. REPLACE drawPlayer FUNCTION -->
+<!-- ========================================= -->
+
+<script>
 
 function drawPlayer(){
 
-    // hoverboard glow
-    ctx.shadowBlur = 25;
-    ctx.shadowColor = "#00f7ff";
+    ctx.save();
 
-    let hoverGradient = ctx.createLinearGradient(
-        player.x,
-        player.y+85,
-        player.x+80,
-        player.y+85
+    ctx.shadowBlur = 25;
+    ctx.shadowColor = "#00eaff";
+
+    ctx.drawImage(
+        playerImg,
+        player.x - 15,
+        player.y - 25,
+        115,
+        145
     );
 
-    hoverGradient.addColorStop(0,"#00f7ff");
-    hoverGradient.addColorStop(1,"#0044ff");
-
-    ctx.fillStyle = hoverGradient;
-
-    ctx.beginPath();
-    ctx.roundRect(player.x-10,player.y+80,100,18,12);
-    ctx.fill();
-
-    ctx.shadowBlur = 0;
-
-    // legs
-    ctx.fillStyle = "#305cff";
-    ctx.fillRect(player.x+20,player.y+45,18,40);
-    ctx.fillRect(player.x+42,player.y+45,18,40);
-
-    // jacket
-    ctx.fillStyle = "#101010";
-    ctx.fillRect(player.x+15,player.y+10,50,45);
-
-    // arms
-    ctx.fillStyle = "#d9a066";
-    ctx.fillRect(player.x+5,player.y+18,12,30);
-    ctx.fillRect(player.x+63,player.y+18,12,30);
-
-    // head
-    ctx.beginPath();
-    ctx.arc(player.x+40,player.y,16,0,Math.PI*2);
-    ctx.fillStyle = "#f0c08a";
-    ctx.fill();
-
-    // cap
-    ctx.fillStyle = "#ff0033";
-    ctx.fillRect(player.x+24,player.y-14,30,10);
-    ctx.fillRect(player.x+50,player.y-10,12,5);
+    ctx.restore();
 }
+
+</script>
+
+
+<!-- ========================================= -->
+<!-- 4. REPLACE spawnObstacle FUNCTION -->
+<!-- ========================================= -->
+
+<script>
 
 function spawnObstacle(){
 
-    let rate = 0.022 + (round*0.008);
+    // slightly increased frequency
+    let rate = 0.032 + (round*0.010);
 
     if(Math.random() < rate){
 
@@ -493,15 +181,24 @@ function spawnObstacle(){
 
         obstacles.push({
             x:Math.random()*(canvas.width-100),
-            y:-100,
-            width:80,
-            height:80,
-            speed:5 + round*1.2,
+            y:-120,
+            width:90,
+            height:90,
+            speed:5.5 + round*1.25,
             type:type,
             rotate:Math.random()*360
         });
     }
 }
+
+</script>
+
+
+<!-- ========================================= -->
+<!-- 5. REPLACE updateObstacles FUNCTION -->
+<!-- ========================================= -->
+
+<script>
 
 function updateObstacles(){
 
@@ -510,61 +207,45 @@ function updateObstacles(){
         let o = obstacles[i];
 
         o.y += o.speed;
-        o.rotate += 2;
+        o.rotate += 1.5;
 
         ctx.save();
+
         ctx.translate(o.x,o.y);
+
         ctx.rotate(o.rotate * Math.PI/180);
 
         if(o.type === "asteroid"){
 
-            ctx.fillStyle = "#5c5c5c";
-
-            ctx.beginPath();
-
-            for(let a=0;a<7;a++){
-
-                let angle = (Math.PI*2/7)*a;
-                let radius = 35 + Math.random()*10;
-
-                ctx.lineTo(
-                    Math.cos(angle)*radius,
-                    Math.sin(angle)*radius
-                );
-            }
-
-            ctx.fill();
+            ctx.drawImage(
+                asteroidImg,
+                -45,
+                -45,
+                90,
+                90
+            );
         }
 
         else if(o.type === "comet"){
 
-            let tail = ctx.createLinearGradient(-80,0,0,0);
-
-            tail.addColorStop(0,"rgba(255,150,0,0)");
-            tail.addColorStop(1,"#ff9900");
-
-            ctx.fillStyle = tail;
-            ctx.fillRect(-100,-10,100,20);
-
-            ctx.beginPath();
-            ctx.arc(0,0,26,0,Math.PI*2);
-            ctx.fillStyle = "#ffcc55";
-            ctx.fill();
+            ctx.drawImage(
+                cometImg,
+                -75,
+                -40,
+                150,
+                80
+            );
         }
 
         else{
 
-            ctx.fillStyle = "#00ff88";
-
-            ctx.beginPath();
-            ctx.ellipse(0,0,40,18,0,0,Math.PI*2);
-            ctx.fill();
-
-            ctx.fillStyle = "#baffff";
-
-            ctx.beginPath();
-            ctx.arc(0,-10,12,0,Math.PI*2);
-            ctx.fill();
+            ctx.drawImage(
+                spaceshipImg,
+                -55,
+                -40,
+                110,
+                80
+            );
         }
 
         ctx.restore();
@@ -582,7 +263,7 @@ function updateObstacles(){
             }
         }
 
-        if(o.y > canvas.height+100){
+        if(o.y > canvas.height+120){
 
             obstacles.splice(i,1);
 
@@ -593,137 +274,14 @@ function updateObstacles(){
     }
 }
 
-function collision(a,b){
+</script>
 
-    return(
-        a.x < b.x + 50 &&
-        a.x + a.width > b.x - 50 &&
-        a.y < b.y + 50 &&
-        a.y + a.height > b.y - 50
-    );
-}
 
-function updateScore(){
-    document.getElementById("score").innerText = "Score: " + score;
-}
+<!-- ========================================= -->
+<!-- 6. REPLACE updateGun FUNCTION -->
+<!-- ========================================= -->
 
-function updateLives(){
-    document.getElementById("lives").innerText = "Lives: " + lives;
-}
-
-function gameOver(){
-
-    clearInterval(roundTimer);
-
-    gameStarted = false;
-
-    document.getElementById("gameOverScreen").style.display = "flex";
-}
-
-function restartRound(){
-
-    document.getElementById("gameOverScreen").style.display = "none";
-
-    startRound(round);
-}
-
-function nextRound(){
-
-    clearInterval(roundTimer);
-
-    gameStarted = false;
-
-    if(round < 3){
-
-        round++;
-
-        player.speed += 1;
-
-        startRound(round);
-    }
-    else{
-
-        finalCelebration();
-    }
-}
-
-function finalCelebration(){
-
-    document.getElementById("finalScreen").style.display = "flex";
-
-    document.getElementById("winnerName").innerHTML =
-        "<h2>"+playerName+"</h2>";
-
-    document.getElementById("finalScore").innerHTML =
-        "FINAL SCORE : " + score;
-
-    setInterval(()=>{
-
-        for(let i=0;i<100;i++){
-
-            particles.push({
-                x:Math.random()*canvas.width,
-                y:Math.random()*canvas.height/2,
-                radius:Math.random()*4,
-                dx:(Math.random()-0.5)*8,
-                dy:(Math.random()-0.5)*8,
-                alpha:1
-            });
-        }
-
-    },500);
-
-    animateFireworks();
-}
-
-function animateFireworks(){
-
-    function loop(){
-
-        ctx.fillStyle = "rgba(0,0,0,0.2)";
-        ctx.fillRect(0,0,canvas.width,canvas.height);
-
-        for(let i=particles.length-1;i>=0;i--){
-
-            let p = particles[i];
-
-            ctx.beginPath();
-
-            ctx.arc(p.x,p.y,p.radius,0,Math.PI*2);
-
-            ctx.fillStyle =
-            `rgba(${Math.random()*255},
-            ${Math.random()*255},
-            ${Math.random()*255},
-            ${p.alpha})`;
-
-            ctx.fill();
-
-            p.x += p.dx;
-            p.y += p.dy;
-
-            p.alpha -= 0.01;
-
-            if(p.alpha <=0){
-                particles.splice(i,1);
-            }
-        }
-
-        requestAnimationFrame(loop);
-    }
-
-    loop();
-}
-
-function spawnGun(){
-
-    gunSpawned = true;
-
-    gunItem = {
-        x:Math.random()*(canvas.width-120),
-        y:-50
-    };
-}
+<script>
 
 function updateGun(){
 
@@ -731,139 +289,35 @@ function updateGun(){
 
         gunItem.y += 5;
 
-        // realistic blaster
         ctx.save();
 
-        ctx.translate(gunItem.x,gunItem.y);
+        ctx.shadowBlur = 25;
+        ctx.shadowColor = "#00ffff";
 
-        ctx.fillStyle = "#222";
-        ctx.fillRect(0,0,70,16);
-
-        ctx.fillStyle = "#00eaff";
-        ctx.fillRect(50,3,25,10);
-
-        ctx.fillStyle = "#444";
-        ctx.fillRect(18,14,12,22);
-
-        ctx.fillStyle = "#999";
-        ctx.fillRect(5,-5,20,5);
-
-        ctx.shadowBlur = 20;
-        ctx.shadowColor = "#00eaff";
-
-        ctx.fillStyle = "#00ffff";
-        ctx.fillRect(48,2,18,12);
+        ctx.drawImage(
+            gunImg,
+            gunItem.x,
+            gunItem.y,
+            90,
+            45
+        );
 
         ctx.restore();
 
         if(
-            player.x < gunItem.x+70 &&
+            player.x < gunItem.x+90 &&
             player.x+player.width > gunItem.x &&
-            player.y < gunItem.y+30 &&
+            player.y < gunItem.y+45 &&
             player.y+player.height > gunItem.y
         ){
 
             gunPower = true;
+
             gunTimer = 60*15;
+
             gunItem = null;
         }
     }
 }
 
-function shootBullet(){
-
-    bullets.push({
-        x:player.x+40,
-        y:player.y,
-        speed:14
-    });
-}
-
-function updateBullets(){
-
-    for(let i=bullets.length-1;i>=0;i--){
-
-        let b = bullets[i];
-
-        b.y -= b.speed;
-
-        ctx.shadowBlur = 20;
-        ctx.shadowColor = "#00ffff";
-
-        ctx.fillStyle = "#00ffff";
-        ctx.fillRect(b.x,b.y,6,24);
-
-        ctx.shadowBlur = 0;
-
-        for(let j=obstacles.length-1;j>=0;j--){
-
-            let o = obstacles[j];
-
-            if(
-                b.x < o.x+50 &&
-                b.x > o.x-50 &&
-                b.y < o.y+50 &&
-                b.y > o.y-50
-            ){
-
-                obstacles.splice(j,1);
-                bullets.splice(i,1);
-
-                score++;
-
-                updateScore();
-
-                break;
-            }
-        }
-    }
-}
-
-let keys = {};
-
-document.addEventListener("keydown",e=>{
-
-    keys[e.key] = true;
-
-    if(e.key === " " && gunPower){
-        shootBullet();
-    }
-});
-
-document.addEventListener("keyup",e=>{
-    keys[e.key] = false;
-});
-
-const leftBtn = document.getElementById("leftBtn");
-const rightBtn = document.getElementById("rightBtn");
-const shootBtn = document.getElementById("shootBtn");
-
-leftBtn.onmousedown = ()=> leftPressed = true;
-leftBtn.onmouseup = ()=> leftPressed = false;
-
-rightBtn.onmousedown = ()=> rightPressed = true;
-rightBtn.onmouseup = ()=> rightPressed = false;
-
-leftBtn.ontouchstart = ()=> leftPressed = true;
-leftBtn.ontouchend = ()=> leftPressed = false;
-
-rightBtn.ontouchstart = ()=> rightPressed = true;
-rightBtn.ontouchend = ()=> rightPressed = false;
-
-shootBtn.onclick = ()=>{
-
-    if(gunPower){
-        shootBullet();
-    }
-};
-
-window.addEventListener("resize",()=>{
-
-    canvas.width = window.innerWidth;
-    canvas.height = window.innerHeight;
-});
-
 </script>
-
-</body>
-</html>
